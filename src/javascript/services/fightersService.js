@@ -2,6 +2,7 @@ import callApi from '../helpers/apiHelper';
 
 class FighterService {
     #endpoint = 'fighters.json';
+
     // #details = `details/fighter/${id}.json`;
     async getFighters() {
         try {

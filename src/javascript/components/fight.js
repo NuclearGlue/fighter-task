@@ -7,12 +7,35 @@ export async function fight(firstFighter, secondFighter) {
     return new Promise(resolve => {
         // resolve the promise with the winner when fight is over
         const pressedKeys = new Set();
+
+        firstFighter.isBlocking = false;
+        secondFighter.isBlocking = false;
+
+        document.addEventListener('keydown', event => {
+            pressedKeys.add(event.key);
+            handleCriticalHit(event);
+        });
+
+        document.addEventListener('keyup', event => {
+            handleBlockRelease(event);
+            pressedKeys.delete(event.key);
+        });
+
         document.addEventListener('keydown', event => {
             pressedKeys.add(event.key);
             handleKeyPress(event);
         });
 
-        function handleKeyPress() {
+        function handleCriticalHit(event) {
+            if (pressedKeys.has('q') && pressedKeys.has('w') && pressedKeys.has('e')) {
+                secondFighter.health -= firstFighter.attack * 2;
+            } else if (pressedKeys.has('u') && pressedKeys.has('i') && pressedKeys.has('o')) {
+                firstFighter.health -= secondFighter.attack * 2;
+            }
+            checkFightEnd();
+        }
+
+        function handleKeyPress(event) {
             if (pressedKeys.has('a') && !firstFighter.isBlocking) {
                 performAttack(firstFighter, secondFighter);
             } else if (pressedKeys.has('d')) {
@@ -21,23 +44,12 @@ export async function fight(firstFighter, secondFighter) {
                 performAttack(secondFighter, firstFighter);
             } else if (pressedKeys.has('l')) {
                 performBlock(secondFighter);
-            } else if (pressedKeys.has('q') && pressedKeys.has('w') && pressedKeys.has('e')) {
-                secondFighter.health -= firstFighter.attack * 2;
-                checkFightEnd();
-            } else if (pressedKeys.has('u') && pressedKeys.has('i') && pressedKeys.has('o')) {
-                firstFighter.health -= secondFighter.attack * 2;
-                checkFightEnd();
             }
-
-            document.addEventListener('keyup', event => {
-                pressedKeys.delete(event.key);
-            });
         }
 
         function performAttack(attacker, defender) {
-            if (!defender.isBlocking) {
-                const damage = getHitPower(attacker);
-                defender.health -= damage;
+            if (defender.isBlocking) {
+                defender.health -= 0;
             } else {
                 const damage = getDamage(attacker, defender);
                 defender.health -= damage;
@@ -46,10 +58,17 @@ export async function fight(firstFighter, secondFighter) {
         }
 
         function performBlock(fighter) {
-            fighter.isBlocking = true;
-            setTimeout(() => {
-                fighter.isBlocking = false;
-            }, 500);
+            if (!fighter.isBlocking) {
+                fighter.isBlocking = true;
+            }
+        }
+
+        function handleBlockRelease(event) {
+            if (event.key === 'd') {
+                firstFighter.isBlocking = false;
+            } else if (event.key === 'l') {
+                secondFighter.isBlocking = false;
+            }
         }
 
         function checkFightEnd() {
@@ -74,13 +93,13 @@ export async function fight(firstFighter, secondFighter) {
 
 export function getHitPower(fighter) {
     // return hit power
-    const criticalHitChance = Math.floor(Math.random() * 2) + 1;
+    const criticalHitChance = Math.random() + 1;
     return fighter.attack * criticalHitChance;
 }
 
 export function getBlockPower(fighter) {
     // return block power
-    const dodgeChance = Math.floor(Math.random() * 2) + 1;
+    const dodgeChance = Math.random() + 1;
     return fighter.defense * dodgeChance;
 }
 

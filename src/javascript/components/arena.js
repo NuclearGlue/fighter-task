@@ -1,5 +1,7 @@
 import createElement from '../helpers/domHelper';
 import { createFighterImage } from './fighterPreview';
+import { fight } from './fight';
+import showWinnerModal from './modal/winner';
 
 function createFighter(fighter, position) {
     const imgElement = createFighterImage(fighter);
@@ -24,13 +26,16 @@ function createFighters(firstFighter, secondFighter) {
 
 function createHealthIndicator(fighter, position) {
     const { name } = fighter;
+
     const container = createElement({ tagName: 'div', className: 'arena___fighter-indicator' });
     const fighterName = createElement({ tagName: 'span', className: 'arena___fighter-name' });
     const indicator = createElement({ tagName: 'div', className: 'arena___health-indicator' });
     const bar = createElement({
         tagName: 'div',
         className: 'arena___health-bar',
-        attributes: { id: `${position}-fighter-indicator` }
+        attributes: {
+            id: `${position}-fighter-indicator`
+        }
     });
 
     fighterName.innerText = name;
@@ -50,7 +55,7 @@ function createHealthIndicators(leftFighter, rightFighter) {
     return healthIndicators;
 }
 
-function createArena(selectedFighters) {
+export function createArena(selectedFighters) {
     const arena = createElement({ tagName: 'div', className: 'arena___root' });
     const healthIndicators = createHealthIndicators(...selectedFighters);
     const fighters = createFighters(...selectedFighters);
@@ -62,11 +67,16 @@ function createArena(selectedFighters) {
 export default function renderArena(selectedFighters) {
     const root = document.getElementById('root');
     const arena = createArena(selectedFighters);
-
     root.innerHTML = '';
     root.append(arena);
 
+    fight(...selectedFighters).then(result => showWinnerModal(result));
     // todo:
     // - start the fight
     // - when fight is finished show winner
+}
+
+export function updateHealth(leftHealth, rightHealth) {
+    document.getElementById('left-fighter-indicator').style.width = `${leftHealth}%`;
+    document.getElementById('right-fighter-indicator').style.width = `${rightHealth}%`;
 }
